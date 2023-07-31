@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using Steamworks;
 using UnityEngine;
 
 namespace WowSoSecret
@@ -9,7 +10,7 @@ namespace WowSoSecret
         private static SecretModeMode _currentMode;
 
         [HarmonyPatch]
-        private class PresencePatch
+        private class DiscordPresencePatch
         {
             private static MethodBase TargetMethod()
             {
@@ -17,8 +18,7 @@ namespace WowSoSecret
                 return AccessTools.Method(type, "UpdateActivityPresence");
             }
 
-            private static void Prefix(ref string state, ref string details, ref string coverArt,
-                ref string trackArtist, ref string trackTitle, ref long endTime)
+            private static void Prefix(ref string state, ref string details, ref string coverArt, ref string trackArtist, ref string trackTitle, ref long endTime)
             {
                 if (_currentMode == SecretModeMode.Disabled) return;
 
@@ -38,7 +38,7 @@ namespace WowSoSecret
                     endTime = 0;
                 }
 
-                if ((GameStates.PlayingTrack || GameStates.PausedTrack) && hidePlay)
+                if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
                 {
                     details = "Playing <SECRET>";
                     state = "Secret Mode Enabled!";
@@ -46,6 +46,48 @@ namespace WowSoSecret
                     trackTitle = "Secret";
                     coverArt = "";
                     endTime = 0;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(SteamFriends), nameof(SteamFriends.SetRichPresence))]
+        [HarmonyPrefix]
+        private static void PatchSteamPresence(string pchKey, ref string pchValue)
+        {
+            if (_currentMode == SecretModeMode.Disabled) return;
+
+            bool hideEdit = _currentMode == SecretModeMode.Editing || _currentMode == SecretModeMode.Both;
+            bool hidePlay = _currentMode == SecretModeMode.Playing || _currentMode == SecretModeMode.Both;
+
+            if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
+            {
+                string text = GameStates.PausedTrack.IsActive ? "Paused" : "Playing";
+                
+                switch (pchKey)
+                {
+                    case "currentTrack":
+                    case "currentArtist":
+                        pchValue = "Secret";
+                        break;
+                    
+                    case "generalStatus":
+                        pchValue = text + " - <SECRET>";
+                        break;
+                }
+            }
+
+            if (GameStates.EditingTrack.IsActive && hideEdit)
+            {
+                switch (pchKey)
+                {
+                    case "currentTrack":
+                    case "currentArtist":
+                        pchValue = "Secret";
+                        break;
+                    
+                    case "generalStatus":
+                        pchValue = "In Level Editor - <SECRET>";
+                        break;
                 }
             }
         }

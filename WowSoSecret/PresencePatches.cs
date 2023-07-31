@@ -30,8 +30,7 @@ namespace WowSoSecret
                 
                 if (GameStates.EditingTrack.IsActive && hideEdit)
                 {
-                    details = "Editing <SECRET>";
-                    state = "Secret Mode Enabled!";
+                    details = "Secret Mode Enabled!";
                     trackArtist = "Secret";
                     trackTitle = "Secret";
                     coverArt = "";
@@ -40,8 +39,16 @@ namespace WowSoSecret
 
                 if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
                 {
-                    details = "Playing <SECRET>";
-                    state = "Secret Mode Enabled!";
+                    details = "Secret Mode Enabled!";
+                    trackArtist = "Secret";
+                    trackTitle = "Secret";
+                    coverArt = "";
+                    endTime = 0;
+                }
+
+                if ((GameStates.Failed.IsActive || GameStates.CompleteSequence.IsActive || GameStates.LevelComplete.IsActive || GameStates.SongCompleted.IsActive) && hidePlay)
+                {
+                    details = "Secret Mode Enabled!";
                     trackArtist = "Secret";
                     trackTitle = "Secret";
                     coverArt = "";
@@ -87,6 +94,21 @@ namespace WowSoSecret
                     
                     case "generalStatus":
                         pchValue = "In Level Editor - <SECRET>";
+                        break;
+                }
+            }
+
+            if ((GameStates.Failed.IsActive || GameStates.CompleteSequence.IsActive || GameStates.LevelComplete.IsActive || GameStates.SongCompleted.IsActive) && hidePlay)
+            {
+                switch (pchKey)
+                {
+                    case "currentTrack":
+                    case "currentArtist":
+                        pchValue = "Secret";
+                        break;
+                    
+                    case "generalStatus":
+                        pchValue = "Results Screen - <SECRET>";
                         break;
                 }
             }

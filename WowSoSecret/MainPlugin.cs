@@ -19,7 +19,8 @@ namespace WowSoSecret
             _logger = Logger;
             Log("Wow So Secret");
             Harmony harmony = new Harmony(Guid);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            harmony.PatchAll(typeof(PresencePatches));
+            harmony.PatchAll(Assembly.GetExecutingAssembly());  // For some completely utterly unknown f**ing reason, this is required to apply the inner PresencePatch patch class.
         }
 
         public static void Log(object msg) => _logger.LogMessage(msg);

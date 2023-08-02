@@ -8,12 +8,13 @@ namespace WowSoSecret
 {
     public static class PresencePatches
     {
-        private static SecretModeMode _currentMode = SecretModeMode.Disabled;
+        public static SecretModeMode CurrentMode = SecretModeMode.Disabled;
         private static SecretTexts _secrets = SecretTexts.Default();
 
-        public static void LoadSecretTexts(string path)
+        public static void LoadSecretTexts(string path, bool customSecrets)
         {
-            _secrets = SecretTexts.FromJson(File.ReadAllText(path));
+            if (customSecrets)
+                _secrets = SecretTexts.FromJson(File.ReadAllText(path));
         }
 
         [HarmonyPatch]
@@ -27,10 +28,10 @@ namespace WowSoSecret
 
             private static void Prefix(ref string state, ref string details, ref string coverArt, ref string trackArtist, ref string trackTitle, ref long endTime)
             {
-                if (_currentMode == SecretModeMode.Disabled) return;
+                if (CurrentMode == SecretModeMode.Disabled) return;
 
-                bool hideEdit = _currentMode == SecretModeMode.Editing || _currentMode == SecretModeMode.Global;
-                bool hidePlay = _currentMode == SecretModeMode.Playing || _currentMode == SecretModeMode.Global;
+                bool hideEdit = CurrentMode == SecretModeMode.Editing || CurrentMode == SecretModeMode.Global;
+                bool hidePlay = CurrentMode == SecretModeMode.Playing || CurrentMode == SecretModeMode.Global;
 
                 if (hidePlay)
                     coverArt = "";
@@ -68,10 +69,10 @@ namespace WowSoSecret
         [HarmonyPrefix]
         private static void PatchSteamPresence(string pchKey, ref string pchValue)
         {
-            if (_currentMode == SecretModeMode.Disabled) return;
+            if (CurrentMode == SecretModeMode.Disabled) return;
 
-            bool hideEdit = _currentMode == SecretModeMode.Editing || _currentMode == SecretModeMode.Global;
-            bool hidePlay = _currentMode == SecretModeMode.Playing || _currentMode == SecretModeMode.Global;
+            bool hideEdit = CurrentMode == SecretModeMode.Editing || CurrentMode == SecretModeMode.Global;
+            bool hidePlay = CurrentMode == SecretModeMode.Playing || CurrentMode == SecretModeMode.Global;
 
             if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
             {
@@ -126,13 +127,13 @@ namespace WowSoSecret
         private static void DisplayTextOnMainMenuOpen()
         {
             DisplayCurrentMode();
-            NotificationSystemGUI.AddMessage("Press F8 to cycle between Secret Mode modes.");
+            NotificationSystemGUI.AddMessage("Press F8 in the main menu to cycle between Secret Mode modes.");
         }
 
         private static void DisplayCurrentMode()
         {
             string status;
-            switch (_currentMode)
+            switch (CurrentMode)
             {
                 case SecretModeMode.Editing:
                     status = "enabled in EDITOR";
@@ -161,9 +162,9 @@ namespace WowSoSecret
         {
             if (Input.GetKeyDown(KeyCode.F8))
             {
-                _currentMode++;
-                if (_currentMode > SecretModeMode.Global)
-                    _currentMode = SecretModeMode.Disabled;
+                CurrentMode++;
+                if (CurrentMode > SecretModeMode.Global)
+                    CurrentMode = SecretModeMode.Disabled;
                 DisplayCurrentMode();
             }
         }

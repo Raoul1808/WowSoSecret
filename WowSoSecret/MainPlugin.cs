@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 
@@ -16,22 +17,29 @@ namespace WowSoSecret
 
         private static ManualLogSource _logger;
 
-        private static string _configFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            "Speen Mods");
+        private static string _secretsPath = Path.Combine(Paths.ConfigPath, "SecretTexts.json");
 
-        private static string _secretsPath = Path.Combine(_configFolder, "SecretTexts.json");
+        private static ConfigFile _config = new ConfigFile(Path.Combine(Paths.ConfigPath, "WowSoSecretConfig.cfg"), true);
         
         void Awake()
         {
             _logger = Logger;
             
-            if (!Directory.Exists(_configFolder))
-                Directory.CreateDirectory(_configFolder);
             if (!File.Exists(_secretsPath))
                 File.WriteAllText(_secretsPath, SecretTexts.Default().ToJson());
 
-            PresencePatches.LoadSecretTexts(_secretsPath);
+            var customSecrets = _config.Bind("General",
+                "CustomSecrets",
+                true,
+                "If set to true, the mod will load secret texts configured in the SecretTexts.json file. If it does not exist, a new file will be created.");
+
+            var startingMode = _config.Bind("General",
+                "StartingMode",
+                SecretModeMode.Disabled,
+                "The starting secret mode mode.");
+
+            PresencePatches.CurrentMode = startingMode.Value;
+            PresencePatches.LoadSecretTexts(_secretsPath, customSecrets.Value);
             
             Harmony harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(PresencePatches));

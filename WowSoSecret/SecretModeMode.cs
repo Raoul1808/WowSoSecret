@@ -5,6 +5,6 @@ namespace WowSoSecret
         Disabled,
         Editing,
         Playing,
-        Both,
+        Global,
     }
 }

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Reflection;
 using HarmonyLib;
 using Steamworks;
@@ -7,7 +8,13 @@ namespace WowSoSecret
 {
     public static class PresencePatches
     {
-        private static SecretModeMode _currentMode;
+        private static SecretModeMode _currentMode = SecretModeMode.Disabled;
+        private static SecretTexts _secrets = SecretTexts.Default();
+
+        public static void LoadSecretTexts(string path)
+        {
+            _secrets = SecretTexts.FromJson(File.ReadAllText(path));
+        }
 
         [HarmonyPatch]
         private class DiscordPresencePatch
@@ -22,15 +29,15 @@ namespace WowSoSecret
             {
                 if (_currentMode == SecretModeMode.Disabled) return;
 
-                bool hideEdit = _currentMode == SecretModeMode.Editing || _currentMode == SecretModeMode.Both;
-                bool hidePlay = _currentMode == SecretModeMode.Playing || _currentMode == SecretModeMode.Both;
+                bool hideEdit = _currentMode == SecretModeMode.Editing || _currentMode == SecretModeMode.Global;
+                bool hidePlay = _currentMode == SecretModeMode.Playing || _currentMode == SecretModeMode.Global;
 
                 if (hidePlay)
                     coverArt = "";
                 
                 if (GameStates.EditingTrack.IsActive && hideEdit)
                 {
-                    details = "Secret Mode Enabled!";
+                    details = _secrets.Editor.GetRandomOrDefault("Secret Mode Enabled!");
                     trackArtist = "Secret";
                     trackTitle = "Secret";
                     coverArt = "";
@@ -39,7 +46,7 @@ namespace WowSoSecret
 
                 if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
                 {
-                    details = "Secret Mode Enabled!";
+                    details = _secrets.Playing.GetRandomOrDefault("Secret Mode Enabled!");
                     trackArtist = "Secret";
                     trackTitle = "Secret";
                     coverArt = "";
@@ -48,7 +55,7 @@ namespace WowSoSecret
 
                 if ((GameStates.Failed.IsActive || GameStates.CompleteSequence.IsActive || GameStates.LevelComplete.IsActive || GameStates.SongCompleted.IsActive) && hidePlay)
                 {
-                    details = "Secret Mode Enabled!";
+                    details = _secrets.Results.GetRandomOrDefault("Secret Mode Enabled!");
                     trackArtist = "Secret";
                     trackTitle = "Secret";
                     coverArt = "";
@@ -63,8 +70,8 @@ namespace WowSoSecret
         {
             if (_currentMode == SecretModeMode.Disabled) return;
 
-            bool hideEdit = _currentMode == SecretModeMode.Editing || _currentMode == SecretModeMode.Both;
-            bool hidePlay = _currentMode == SecretModeMode.Playing || _currentMode == SecretModeMode.Both;
+            bool hideEdit = _currentMode == SecretModeMode.Editing || _currentMode == SecretModeMode.Global;
+            bool hidePlay = _currentMode == SecretModeMode.Playing || _currentMode == SecretModeMode.Global;
 
             if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
             {
@@ -78,7 +85,7 @@ namespace WowSoSecret
                         break;
                     
                     case "generalStatus":
-                        pchValue = text + " - <SECRET>";
+                        pchValue = text + " - " + _secrets.Playing.GetRandomOrDefault("Secret Mode Enabled!");
                         break;
                 }
             }
@@ -93,7 +100,7 @@ namespace WowSoSecret
                         break;
                     
                     case "generalStatus":
-                        pchValue = "In Level Editor - <SECRET>";
+                        pchValue = "In Level Editor - " + _secrets.Editor.GetRandomOrDefault("Secret Mode Enabled!");
                         break;
                 }
             }
@@ -108,7 +115,7 @@ namespace WowSoSecret
                         break;
                     
                     case "generalStatus":
-                        pchValue = "Results Screen - <SECRET>";
+                        pchValue = "Results Screen - " + _secrets.Results.GetRandomOrDefault("Secret Mode Enabled!");
                         break;
                 }
             }
@@ -135,7 +142,7 @@ namespace WowSoSecret
                     status = "enabled while PLAYING";
                     break;
                 
-                case SecretModeMode.Both:
+                case SecretModeMode.Global:
                     status = "GLOBALLY ENABLED";
                     break;
                 
@@ -155,7 +162,7 @@ namespace WowSoSecret
             if (Input.GetKeyDown(KeyCode.F8))
             {
                 _currentMode++;
-                if (_currentMode > SecretModeMode.Both)
+                if (_currentMode > SecretModeMode.Global)
                     _currentMode = SecretModeMode.Disabled;
                 DisplayCurrentMode();
             }

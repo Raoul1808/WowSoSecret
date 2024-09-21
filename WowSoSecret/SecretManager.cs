@@ -8,7 +8,7 @@ namespace WowSoSecret
     public static class SecretManager
     {
         private static ConfigFile _config;
-        private static SecretTexts _secretTexts;
+        internal static SecretTexts SecretTexts { get; private set; }
 
         public static readonly string SecretsPath = Path.Combine(Paths.ConfigPath, "SecretTexts.json");
         public static bool CustomSecrets { get; set; }
@@ -37,7 +37,7 @@ namespace WowSoSecret
         {
             try
             {
-                _secretTexts = SecretTexts.FromJson(File.ReadAllText(SecretsPath));
+                SecretTexts = SecretTexts.FromJson(File.ReadAllText(SecretsPath));
             }
             catch (Exception)
             {
@@ -47,7 +47,7 @@ namespace WowSoSecret
 
         internal static void SaveSecrets()
         {
-            File.WriteAllText(SecretsPath, _secretTexts.ToJson());
+            File.WriteAllText(SecretsPath, SecretTexts.ToJson());
         }
         
         public static void DisplayCurrentMode()
@@ -76,8 +76,8 @@ namespace WowSoSecret
             NotificationSystemGUI.AddMessage("Secret Mode is currently " + status + ".");
         }
 
-        public static string GetPlayingText() => CustomSecrets ? _secretTexts.Playing.GetRandomOrDefault(SecretTexts.DefaultText) : SecretTexts.DefaultText;
-        public static string GetEditorText() => CustomSecrets ? _secretTexts.Editor.GetRandomOrDefault(SecretTexts.DefaultText) : SecretTexts.DefaultText;
-        public static string GetResultsText() => CustomSecrets ? _secretTexts.Results.GetRandomOrDefault(SecretTexts.DefaultText) : SecretTexts.DefaultText;
+        public static string GetPlayingText() => CustomSecrets ? SecretTexts.Playing.GetRandomOrDefault(SecretTexts.DefaultText) : SecretTexts.DefaultText;
+        public static string GetEditorText() => CustomSecrets ? SecretTexts.Editor.GetRandomOrDefault(SecretTexts.DefaultText) : SecretTexts.DefaultText;
+        public static string GetResultsText() => CustomSecrets ? SecretTexts.Results.GetRandomOrDefault(SecretTexts.DefaultText) : SecretTexts.DefaultText;
     }
 }

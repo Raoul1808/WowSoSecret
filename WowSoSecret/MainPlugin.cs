@@ -2,12 +2,11 @@ using System.IO;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using UnityEngine;
 
 namespace WowSoSecret
 {
     [BepInPlugin(Guid, Name, Version)]
-    [BepInDependency(SpinCoreSupport.Guid, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(SpinCoreGuid, BepInDependency.DependencyFlags.HardDependency)]
     public class MainPlugin : BaseUnityPlugin
     {
         private const string Guid = "srxd.raoul1808.wowsosecret";
@@ -31,27 +30,7 @@ namespace WowSoSecret
             
             Harmony harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(PresencePatches));
-            //harmony.PatchAll(Assembly.GetExecutingAssembly());  // For some completely utterly unknown f**ing reason, this is required to apply the inner PresencePatch patch class.
-            if (SpinCoreSupport.Enabled)
-                SpinCoreSupport.Init();
-            else
-                harmony.PatchAll(typeof(CorelessPatch));
-        }
-
-        private class CorelessPatch
-        {
-            [HarmonyPatch(typeof(XDMainMenu), "Update")]
-            [HarmonyPostfix]
-            private static void UpdateSecretMode()
-            {
-                if (Input.GetKeyDown(KeyCode.F8))
-                {
-                    SecretManager.CurrentMode++;
-                    if (SecretManager.CurrentMode > SecretMode.Global)
-                        SecretManager.CurrentMode = SecretMode.Disabled;
-                    SecretManager.DisplayCurrentMode();
-                }
-            }
+            SpinCoreSupport.Init();
         }
 
         public static void Log(object msg) => _logger.LogMessage(msg);

@@ -2,6 +2,10 @@
   "WowSoSecret_Name": {
     "en": "Wow So Secret"
   },
+  "WowSoSecret_GeneralSection": {
+    "en": "General",
+    "fr": "Général"
+  },
   "WowSoSecret_SecretModeOption": {
     "en": "Current mode",
     "fr": "Mode actuel"
@@ -9,5 +13,32 @@
   "WowSoSecret_CustomSecretsToggle": {
     "en": "Enable custom secret messages",
     "fr": "Activer les messages secrets personnalisés"
+  },
+  "WowSoSecret_CustomSecrets_Header": {
+    "en": "Custom Secret Messages",
+    "fr": "Messages secrets personnalisés"
+  },
+  "WowSoSecret_CustomSecrets_LoadButton": {
+    "en": "Reload messages",
+    "fr": "Recharger les messages"
+  },
+  "WowSoSecret_CustomSecrets_SaveButton": {
+    "en": "Save messages",
+    "fr": "Sauvegarder les messages"
+  },
+  "WowSoSecret_EditorCategory": {
+    "en": "Editor",
+    "fr": "Éditeur"
+  },
+  "WowSoSecret_PlayingCategory": {
+    "en": "Playing",
+    "fr": "En jeu"
+  },
+  "WowSoSecret_ResultsCategory": {
+    "en": "Results",
+    "fr": "Fin de jeu"
+  },
+  "WowSoSecret_DeleteButtonLabel": {
+    "en": "-"
   }
 }

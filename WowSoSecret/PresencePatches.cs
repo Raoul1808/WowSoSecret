@@ -111,8 +111,6 @@ namespace WowSoSecret
         private static void DisplayTextOnMainMenuOpen()
         {
             SecretManager.DisplayCurrentMode();
-            if (!SpinCoreSupport.Enabled)
-                NotificationSystemGUI.AddMessage("Press F8 in the main menu to cycle between Secret Mode modes.");
         }
     }
 }

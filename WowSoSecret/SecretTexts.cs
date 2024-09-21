@@ -9,20 +9,22 @@ namespace WowSoSecret
         public List<string> Playing { get; set; }
         public List<string> Results { get; set; }
 
+        public const string DefaultText = "Secret Mode Enabled!";
+
         public static SecretTexts Default() =>
             new SecretTexts
             {
                 Editor = new List<string>
                 {
-                    "Secret Mode Enabled!",
+                    DefaultText,
                 },
                 Playing = new List<string>
                 {
-                    "Secret Mode Enabled!",
+                    DefaultText,
                 },
                 Results = new List<string>
                 {
-                    "Secret Mode Enabled!",
+                    DefaultText,
                 }
             };
 

@@ -1,67 +1,51 @@
-using System.IO;
-using System.Reflection;
 using HarmonyLib;
 using Steamworks;
-using UnityEngine;
 
 namespace WowSoSecret
 {
+    [HarmonyPatch]
     public static class PresencePatches
     {
-        public static SecretModeMode CurrentMode = SecretModeMode.Disabled;
-        private static SecretTexts _secrets = SecretTexts.Default();
-
-        public static void LoadSecretTexts(string path, bool customSecrets)
+        [HarmonyPatch(typeof(SpinDiscord), nameof(SpinDiscord.UpdateActivityPresence))]
+        [HarmonyPrefix]
+        private static void Prefix(ref string state, ref string details, ref string coverArt, ref string trackArtist, ref string trackTitle, ref long endTime)
         {
-            if (customSecrets)
-                _secrets = SecretTexts.FromJson(File.ReadAllText(path));
-        }
+            if (SecretManager.CurrentMode == SecretMode.Disabled) return;
 
-        [HarmonyPatch]
-        private class DiscordPresencePatch
-        {
-            private static MethodBase TargetMethod()
+            bool hideEdit = SecretManager.CurrentMode == SecretMode.Editing ||
+                            SecretManager.CurrentMode == SecretMode.Global;
+            bool hidePlay = SecretManager.CurrentMode == SecretMode.Playing ||
+                            SecretManager.CurrentMode == SecretMode.Global;
+
+            if (hidePlay)
+                coverArt = "";
+
+            if (GameStates.EditingTrack.IsActive && hideEdit)
             {
-                var type = AccessTools.TypeByName("SpinDiscord");
-                return AccessTools.Method(type, "UpdateActivityPresence");
+                details = SecretManager.GetEditorText();
+                trackArtist = "Secret";
+                trackTitle = "Secret";
+                coverArt = "";
+                endTime = 0;
             }
 
-            private static void Prefix(ref string state, ref string details, ref string coverArt, ref string trackArtist, ref string trackTitle, ref long endTime)
+            if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
             {
-                if (CurrentMode == SecretModeMode.Disabled) return;
+                details = SecretManager.GetPlayingText();
+                trackArtist = "Secret";
+                trackTitle = "Secret";
+                coverArt = "";
+                endTime = 0;
+            }
 
-                bool hideEdit = CurrentMode == SecretModeMode.Editing || CurrentMode == SecretModeMode.Global;
-                bool hidePlay = CurrentMode == SecretModeMode.Playing || CurrentMode == SecretModeMode.Global;
-
-                if (hidePlay)
-                    coverArt = "";
-                
-                if (GameStates.EditingTrack.IsActive && hideEdit)
-                {
-                    details = _secrets.Editor.GetRandomOrDefault("Secret Mode Enabled!");
-                    trackArtist = "Secret";
-                    trackTitle = "Secret";
-                    coverArt = "";
-                    endTime = 0;
-                }
-
-                if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
-                {
-                    details = _secrets.Playing.GetRandomOrDefault("Secret Mode Enabled!");
-                    trackArtist = "Secret";
-                    trackTitle = "Secret";
-                    coverArt = "";
-                    endTime = 0;
-                }
-
-                if ((GameStates.Failed.IsActive || GameStates.CompleteSequence.IsActive || GameStates.LevelComplete.IsActive || GameStates.SongCompleted.IsActive) && hidePlay)
-                {
-                    details = _secrets.Results.GetRandomOrDefault("Secret Mode Enabled!");
-                    trackArtist = "Secret";
-                    trackTitle = "Secret";
-                    coverArt = "";
-                    endTime = 0;
-                }
+            if ((GameStates.Failed.IsActive || GameStates.CompleteSequence.IsActive ||
+                 GameStates.LevelComplete.IsActive || GameStates.SongCompleted.IsActive) && hidePlay)
+            {
+                details = SecretManager.GetResultsText();
+                trackArtist = "Secret";
+                trackTitle = "Secret";
+                coverArt = "";
+                endTime = 0;
             }
         }
 
@@ -69,10 +53,10 @@ namespace WowSoSecret
         [HarmonyPrefix]
         private static void PatchSteamPresence(string pchKey, ref string pchValue)
         {
-            if (CurrentMode == SecretModeMode.Disabled) return;
+            if (SecretManager.CurrentMode == SecretMode.Disabled) return;
 
-            bool hideEdit = CurrentMode == SecretModeMode.Editing || CurrentMode == SecretModeMode.Global;
-            bool hidePlay = CurrentMode == SecretModeMode.Playing || CurrentMode == SecretModeMode.Global;
+            bool hideEdit = SecretManager.CurrentMode == SecretMode.Editing || SecretManager.CurrentMode == SecretMode.Global;
+            bool hidePlay = SecretManager.CurrentMode == SecretMode.Playing || SecretManager.CurrentMode == SecretMode.Global;
 
             if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
             {
@@ -86,7 +70,7 @@ namespace WowSoSecret
                         break;
                     
                     case "generalStatus":
-                        pchValue = text + " - " + _secrets.Playing.GetRandomOrDefault("Secret Mode Enabled!");
+                        pchValue = text + " - " + SecretManager.GetPlayingText();
                         break;
                 }
             }
@@ -101,7 +85,7 @@ namespace WowSoSecret
                         break;
                     
                     case "generalStatus":
-                        pchValue = "In Level Editor - " + _secrets.Editor.GetRandomOrDefault("Secret Mode Enabled!");
+                        pchValue = "In Level Editor - " + SecretManager.GetEditorText();
                         break;
                 }
             }
@@ -116,7 +100,7 @@ namespace WowSoSecret
                         break;
                     
                     case "generalStatus":
-                        pchValue = "Results Screen - " + _secrets.Results.GetRandomOrDefault("Secret Mode Enabled!");
+                        pchValue = "Results Screen - " + SecretManager.GetResultsText();
                         break;
                 }
             }
@@ -126,47 +110,9 @@ namespace WowSoSecret
         [HarmonyPostfix]
         private static void DisplayTextOnMainMenuOpen()
         {
-            DisplayCurrentMode();
-            NotificationSystemGUI.AddMessage("Press F8 in the main menu to cycle between Secret Mode modes.");
-        }
-
-        private static void DisplayCurrentMode()
-        {
-            string status;
-            switch (CurrentMode)
-            {
-                case SecretModeMode.Editing:
-                    status = "enabled in EDITOR";
-                    break;
-                
-                case SecretModeMode.Playing:
-                    status = "enabled while PLAYING";
-                    break;
-                
-                case SecretModeMode.Global:
-                    status = "GLOBALLY ENABLED";
-                    break;
-                
-                case SecretModeMode.Disabled:
-                default:
-                    status = "DISABLED";
-                    break;
-            }
-            
-            NotificationSystemGUI.AddMessage("Secret Mode is currently " + status + ".");
-        }
-
-        [HarmonyPatch(typeof(XDMainMenu), "Update")]
-        [HarmonyPostfix]
-        private static void UpdateSecretMode()
-        {
-            if (Input.GetKeyDown(KeyCode.F8))
-            {
-                CurrentMode++;
-                if (CurrentMode > SecretModeMode.Global)
-                    CurrentMode = SecretModeMode.Disabled;
-                DisplayCurrentMode();
-            }
+            SecretManager.DisplayCurrentMode();
+            if (!SpinCoreSupport.Enabled)
+                NotificationSystemGUI.AddMessage("Press F8 in the main menu to cycle between Secret Mode modes.");
         }
     }
 }

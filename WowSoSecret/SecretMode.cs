@@ -1,6 +1,6 @@
 namespace WowSoSecret
 {
-    public enum SecretModeMode
+    public enum SecretMode
     {
         Disabled,
         Editing,

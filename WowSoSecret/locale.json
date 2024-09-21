@@ -1,2 +1,13 @@
 {
+  "WowSoSecret_Name": {
+    "en": "Wow So Secret"
+  },
+  "WowSoSecret_SecretModeOption": {
+    "en": "Current mode",
+    "fr": "Mode actuel"
+  },
+  "WowSoSecret_CustomSecretsToggle": {
+    "en": "Enable custom secret messages",
+    "fr": "Activer les messages secrets personnalisés"
+  }
 }

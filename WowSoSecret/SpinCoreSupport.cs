@@ -15,6 +15,8 @@ namespace WowSoSecret
         private static CustomGroup _resultsGroup;
         private static int _currentCategory;
         private static CustomInputField _secretInput;
+        private static CustomMultiChoice _quickMulti;
+        private static CustomMultiChoice _optionsMulti;
 
         public static void Init()
         {
@@ -30,13 +32,16 @@ namespace WowSoSecret
                     "WowSoSecret_Name",
                     false
                 );
-                UIHelper.CreateSmallMultiChoiceButton(
+                _quickMulti = UIHelper.CreateSmallMultiChoiceButton(
                     group.Transform,
                     "SecretModeToggle",
                     "WowSoSecret_SecretModeOption",
                     SecretManager.CurrentMode,
-                    val => SecretManager.CurrentMode = val
-                );
+                    val =>
+                    {
+                        SecretManager.CurrentMode = val;
+                        _optionsMulti?.SetCurrentValue((int)val);
+                    });
             });
 
             var page = UIHelper.CreateCustomPage("WowSoSecret");
@@ -51,13 +56,16 @@ namespace WowSoSecret
                     "WowSoSecret_GeneralSection",
                     false
                 );
-                UIHelper.CreateLargeMultiChoiceButton(
+                _optionsMulti = UIHelper.CreateLargeMultiChoiceButton(
                     generalGroup.Transform,
                     "SecretModeToggle",
                     "WowSoSecret_SecretModeOption",
                     SecretManager.CurrentMode,
-                    val => SecretManager.CurrentMode = val
-                );
+                    val =>
+                    {
+                        SecretManager.CurrentMode = val;
+                        _quickMulti?.SetCurrentValue((int)val);
+                    });
                 UIHelper.CreateLargeToggle(
                     generalGroup.Transform,
                     "CustomSecretsToggle",

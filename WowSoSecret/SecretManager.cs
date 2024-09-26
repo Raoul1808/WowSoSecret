@@ -8,12 +8,17 @@ namespace WowSoSecret
     public static class SecretManager
     {
         private static ConfigFile _config;
+        private static ConfigEntry<SecretMode> _secretModeEntry;
         internal static SecretTexts SecretTexts { get; private set; }
 
         public static readonly string SecretsPath = Path.Combine(Paths.ConfigPath, "SecretTexts.json");
         public static bool CustomSecrets { get; set; }
 
-        public static SecretMode CurrentMode { get; set; }
+        public static SecretMode CurrentMode
+        {
+            get => _secretModeEntry?.Value ?? SecretMode.Disabled;
+            set => _secretModeEntry.Value = value;
+        }
 
         internal static void Init(ConfigFile config)
         {
@@ -23,12 +28,11 @@ namespace WowSoSecret
                 "CustomSecrets",
                 true,
                 "If set to true, the mod will load secret texts configured in the SecretTexts.json file. If it does not exist, a new file will be created.");
-            var startingMode = _config.Bind("General",
-                "StartingMode",
+            _secretModeEntry = _config.Bind("General",
+                "CurrentMode",
                 SecretMode.Disabled,
-                "The starting secret mode mode.");
+                "The current secret mode mode.");
 
-            CurrentMode = startingMode.Value;
             CustomSecrets = customSecrets.Value;
             LoadSecretsFromDisk();
         }

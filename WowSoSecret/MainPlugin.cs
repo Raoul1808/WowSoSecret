@@ -10,7 +10,7 @@ namespace WowSoSecret
     {
         private const string Guid = "srxd.raoul1808.wowsosecret";
         private const string Name = "Wow So Secret";
-        private const string Version = "2.1.0";
+        private const string Version = "2.1.1";
 
         private const string SpinCoreGuid = "srxd.raoul1808.spincore";
 

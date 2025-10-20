@@ -1,6 +1,5 @@
 using System.IO;
 using BepInEx;
-using BepInEx.Logging;
 using HarmonyLib;
 
 namespace WowSoSecret
@@ -15,14 +14,11 @@ namespace WowSoSecret
 
         private const string SpinCoreGuid = "srxd.raoul1808.spincore";
 
-        private static ManualLogSource _logger;
-
         private static string _secretsPath = Path.Combine(Paths.ConfigPath, "SecretTexts.json");
 
         void Awake()
         {
-            _logger = Logger;
-
+            Log.Init(Logger);
             if (!File.Exists(_secretsPath))
                 File.WriteAllText(_secretsPath, SecretTexts.Default().ToJson());
 
@@ -32,7 +28,5 @@ namespace WowSoSecret
             harmony.PatchAll(typeof(PresencePatches));
             SpinCoreSupport.Init();
         }
-
-        public static void Log(object msg) => _logger.LogMessage(msg);
     }
 }

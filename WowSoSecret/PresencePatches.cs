@@ -6,6 +6,9 @@ namespace WowSoSecret
     [HarmonyPatch]
     public static class PresencePatches
     {
+        private static bool _inEditor => TrackEditorGUI.Instance != null &&
+                                         PlayState.Active?.trackData.Setup.SetupParameters.editMode == true;
+        
         [HarmonyPatch(typeof(SpinDiscord), nameof(SpinDiscord.UpdateActivityPresence))]
         [HarmonyPrefix]
         private static void Prefix(ref string state, ref string details, ref string coverArt, ref string trackArtist, ref string trackTitle, ref long endTime)
@@ -20,8 +23,9 @@ namespace WowSoSecret
             if (hidePlay)
                 coverArt = "";
 
-            if (GameStates.EditingTrack.IsActive && hideEdit)
+            if (_inEditor && hideEdit)
             {
+                Log.Info("We in editor!");
                 details = SecretManager.GetEditorText();
                 trackArtist = "Secret";
                 trackTitle = "Secret";
@@ -29,8 +33,9 @@ namespace WowSoSecret
                 endTime = 0;
             }
 
-            if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
+            if (!_inEditor && (GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
             {
+                Log.Info("We in play!");
                 details = SecretManager.GetPlayingText();
                 trackArtist = "Secret";
                 trackTitle = "Secret";
@@ -41,6 +46,7 @@ namespace WowSoSecret
             if ((GameStates.Failed.IsActive || GameStates.CompleteSequence.IsActive ||
                  GameStates.LevelComplete.IsActive || GameStates.SongCompleted.IsActive) && hidePlay)
             {
+                Log.Info("We in loss!");
                 details = SecretManager.GetResultsText();
                 trackArtist = "Secret";
                 trackTitle = "Secret";
@@ -58,7 +64,7 @@ namespace WowSoSecret
             bool hideEdit = SecretManager.CurrentMode == SecretMode.Editing || SecretManager.CurrentMode == SecretMode.Global;
             bool hidePlay = SecretManager.CurrentMode == SecretMode.Playing || SecretManager.CurrentMode == SecretMode.Global;
 
-            if ((GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
+            if (!_inEditor && (GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
             {
                 string text = GameStates.PausedTrack.IsActive ? "Paused" : "Playing";
                 
@@ -75,7 +81,7 @@ namespace WowSoSecret
                 }
             }
 
-            if (GameStates.EditingTrack.IsActive && hideEdit)
+            if (_inEditor && hideEdit)
             {
                 switch (pchKey)
                 {

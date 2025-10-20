@@ -25,7 +25,6 @@ namespace WowSoSecret
 
             if (_inEditor && hideEdit)
             {
-                Log.Info("We in editor!");
                 details = SecretManager.GetEditorText();
                 trackArtist = "Secret";
                 trackTitle = "Secret";
@@ -35,7 +34,6 @@ namespace WowSoSecret
 
             if (!_inEditor && (GameStates.PlayingTrack.IsActive || GameStates.PausedTrack.IsActive) && hidePlay)
             {
-                Log.Info("We in play!");
                 details = SecretManager.GetPlayingText();
                 trackArtist = "Secret";
                 trackTitle = "Secret";
@@ -46,7 +44,6 @@ namespace WowSoSecret
             if ((GameStates.Failed.IsActive || GameStates.CompleteSequence.IsActive ||
                  GameStates.LevelComplete.IsActive || GameStates.SongCompleted.IsActive) && hidePlay)
             {
-                Log.Info("We in loss!");
                 details = SecretManager.GetResultsText();
                 trackArtist = "Secret";
                 trackTitle = "Secret";
